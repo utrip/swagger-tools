@@ -95,29 +95,49 @@
         }
       }
 
-      $.ajax({
-        type: "HEAD",
-        async: true,
-        url: document.location,
-        error: function (xhr, status, thrown) {
-          log("Unable to get the Swagger UI URL from the server: " + thrown);
-        },
-        success: function (message, text, response) {
-          var url = response.getResponseHeader('Swagger-API-Docs-URL');
-
-          if (!url) {
-            url = window.location.search.match(/url=([^&]+)/);
-
-            if (url && url.length > 1) {
-              url = decodeURIComponent(url[1]);
-            } else {
-              url = "http://petstore.swagger.io/v2/swagger.json";
-            }
-          }
-
-          initSwaggerUi(url);
+      // AWS Lambda workaround to set path to swagger.json directory (/config by default)
+      var url_parts = window.location.pathname.split('/');
+      var swagger_path = '';
+      var swagger_url_parts = [ window.location.protocol + '//' + window.location.host ];
+    
+      url_parts.forEach(function(part, index) {
+        if(part.length && part.indexOf('api-docs') === -1) {
+          swagger_url_parts.push(part);
         }
       });
+
+      swagger_url_parts.push('config');
+      swagger_path = swagger_url_parts.join('/');
+
+      swagger_path = decodeURIComponent(swagger_path);
+      console.log('***swagger-path', swagger_path )
+
+      initSwaggerUi(swagger_path);
+
+      // original - gets path to swagger file from Response Header('Swagger-API-Docs-URL');
+      // $.ajax({
+      //   type: "HEAD",
+      //   async: true,
+      //   url: document.location,
+      //   error: function (xhr, status, thrown) {
+      //     log("Unable to get the Swagger UI URL from the server: " + thrown);
+      //   },
+      //   success: function (message, text, response) {
+      //     // var url = response.getResponseHeader('Swagger-API-Docs-URL');
+      //
+      //     if (!url) {
+      //       url = window.location.search.match(/url=([^&]+)/);
+
+      //       if (url && url.length > 1) {
+      //         url = decodeURIComponent(url[1]);
+      //         console.log("URL is: ", url)
+      //       } else {
+      //         url = "http://petstore.swagger.io/v2/swagger.json";
+      //       }
+      //     }
+        //   initSwaggerUi(url);
+        // }
+      // });
     });
   </script>
 </head>

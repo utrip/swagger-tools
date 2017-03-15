@@ -126,6 +126,7 @@ exports = module.exports = function (rlOrSO, apiDeclarations, options) {
   debug('  swagger-ui path: %s', options.swaggerUi);
 
   return function swaggerUI (req, res, next) {
+
     var path = parseurl(req).pathname;
     var isApiDocsPath = apiDocsPaths.indexOf(path) > -1 || (swaggerVersion !== '1.2' && path === options.apiDocsPath);
     var isSwaggerUiPath = path === options.swaggerUi || path.indexOf(options.swaggerUi + '/') === 0;
@@ -137,8 +138,14 @@ exports = module.exports = function (rlOrSO, apiDeclarations, options) {
       // Remove the part after the mount point
       swaggerApiDocsURL = swaggerApiDocsURL.substring(0, swaggerApiDocsURL.indexOf(req.url));
       
-      // Add the API docs path and remove any double dashes
-      swaggerApiDocsURL = ((options.swaggerUiPrefix ? options.swaggerUiPrefix : '') + swaggerApiDocsURL + options.apiDocs).replace(/\/\//g, '/'); 
+    // AWS LAMBDA WORKAROUND:
+      // override swaggerUiPrefix with extra path info from lambda (such as '/latest')
+      options.swaggerUiPrefix = req.api_basepath + options.swaggerUiPrefix;
+      // swaggerApiDocsURL = ((options.swaggerUiPrefix ? options.swaggerUiPrefix : '') + swaggerApiDocsURL + options.apiDocs).replace(/\/\//g, '/'); 
+      swaggerApiDocsURL = ((options.swaggerUiPrefix ? options.swaggerUiPrefix : '') + options.apiDocs).replace(/\/\//g, '/');
+      debug('***swaggerUiPrefix', options.swaggerUiPrefix)
+      debug('***swaggerApiDocsURL', swaggerApiDocsURL);
+    // END
     }
 
     debug('%s %s', req.method, req.url);
